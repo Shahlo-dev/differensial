@@ -11,7 +11,6 @@ def install_packages():
         except ImportError:
             subprocess.check_call([sys.executable, "-m", "pip", "install", package])
 
-# Streamlit serverida kutubxonalar bo'lmasa, avtomatik o'rnatadi
 install_packages()
 
 # --- ASOSIY DASTUR QISMI ---
@@ -21,7 +20,6 @@ import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
 import sympy as sp
 
-# Sahifa sozlamalari
 st.set_page_config(page_title="AI Matematika O'qituvchisi", page_icon="📝", layout="wide")
 st.title("📝 Differensial Tenglamalarni Qadamba-Qadam Tushuntirish Tizimi")
 st.markdown("Ushbu tizim talabalar darsda va daftarda qanday yozsa, tenglamani xuddi shunday bosqichma-bosqich yechib beradi.")
@@ -57,20 +55,21 @@ def generate_notebook_solution(expr_str, t0_val, y0_val):
         steps.append("Topilgan $v(t)$ ni asosiy tenglamaga qaytarib qo'yamiz ($u \\cdot 0 = 0$ bo'lib ketadi):")
         steps.append("$$e^{-2t} \\cdot u' = \\sin(t) \\implies u' = \\frac{\\sin(t)}{e^{-2t}} = e^{2t} \\cdot \\sin(t)$$")
         steps.append("Endi $u(t)$ ni topish uchun bo'laklab integrallash qoidasini qo'llaymiz:")
-        steps.append("$$u(t) = \\int e^{2t} \\sin(t) dt = \\frac{e^{2t}(2\\sin(t) - \\cos(t))}{5} + C$$")
+        steps.append(r"$$u(t) = \int e^{2t} \sin(t) dt = \frac{e^{2t}(2\sin(t) - \cos(t))}{5} + C$$")
         
         steps.append("**5-Qadam: Umumiy yechimni shakllantirish.**")
         steps.append("Biz boshida $y = u \\cdot v$ degan edik. Ikkala topilgan ifodani ko'paytiramiz:")
-        steps.append("$$y(t) = \\left( \\frac{e^{2t}(2\\sin(t) - \\cos(t))}{5} + C \\right) \\cdot e^{-2t}$$")
+        steps.append(r"$$y(t) = \left( \frac{e^{2t}(2\sin(t) - \cos(t))}{5} + C \right) \cdot e^{-2t}$$")
         steps.append("Qavslarni ochib chiqsak, $e^{2t} \\cdot e^{-2t} = 1$ bo'lgani uchun umumiy yechim:")
-        steps.append("$$y(t) = \\frac{2\\sin(t) - \\cos(t)}{5} + C \\cdot e^{-2t}$$")
+        steps.append(r"$$y(t) = \frac{2\sin(t) - \cos(t)}{5} + C \cdot e^{-2t}$$")
         
         steps.append(f"**6-Qadam: Boshlang'ich shart y({t0_val})={y0_val} orqali C ni topish.**")
         steps.append(f"Tenglamaga $t = {t0_val}$ va $y = {y0_val}$ qiymatlarini qo'yamiz:")
-        steps.append(f"$$1 = \\frac{2\\sin(0) - \\cos(0)}{5} + C \\cdot e^{0} \\implies 1 = -\\frac{{1}}{{5}} + C \\implies C = 1 + 0.2 = 1.2$$")
+        # Mana shu satr oddiy xatosiz formatga o'tkazildi:
+        steps.append(r"$$1 = \frac{2\sin(0) - \cos(0)}{5} + C \cdot e^{0} \implies 1 = -\frac{1}{5} + C \implies C = 1 + 0.2 = 1.2$$")
         
         steps.append("**🎯 Yakuniy Aniq Yechim (Cauchy masalasi javobi):**")
-        steps.append("$$y(t) = \\frac{2\\sin(t) - \\cos(t)}{5} + 1.2 \\cdot e^{-2t}$$")
+        steps.append(r"$$y(t) = \frac{2\sin(t) - \cos(t)}{5} + 1.2 \cdot e^{-2t}$$")
     else:
         t_s, y_s = sp.symbols('t y')
         try:
@@ -81,9 +80,9 @@ def generate_notebook_solution(expr_str, t0_val, y0_val):
             
         steps.append("### 🤖 Daftarda Yechish Strategiyasi:")
         steps.append(f"Berilgan tenglama: $$y' = {latex_expr}$$")
-        steps.append("1. Ushbu ifodadan $y$ qatnashgan qismlarni bir tomonga, $t$ qatnashgan qismlarni ikkinchi tomonga o'tkazish kerak.")
-        steps.append("2. Har bir tomon uchun alohida aniqmas integral olinadi.")
-        steps.append(f"3. Integrallashdan so'ng hosil bo'lgan ixtiyoriy $C$ o'zgarmasini aniqlash uchun $t_0={t0_val}$ va $y_0={y0_val}$ boshlang'ich shartlari o'rniga qo'yiladi.")
+        steps.append("1. O'zgaruvchilarni ajratish yoki tegishli almashtirish kiritish lozim.")
+        steps.append("2. Har bir tomon aniqmas integral yordamida hisoblanadi.")
+        steps.append(f"3. Hosil bo'lgan $C$ o'zgarmasini topish uchun $t_0={t0_val}$ va $y_0={y0_val}$ shartlari qo'yiladi.")
         
     return "\n\n".join(steps)
 
@@ -95,16 +94,6 @@ if st.sidebar.button("🚀 Qadamba-Qadam Hisoblash", type="primary"):
         y_func = sp.Function('y')(t_sym)
         ode_eq = sp.Eq(y_func.diff(t_sym), f_sym.subs(y_sym, y_func))
         
-        # Analitik yechishga urinib ko'rish
-        analitik_yechim_bor = False
-        try:
-            ics = {y_func.subs(t_sym, t0): y0}
-            particular_sol = sp.dsolve(ode_eq, y_func, ics=ics)
-            analitik_yechim_bor = True
-        except:
-            pass
-            
-        # Sonli (Numeric) yechish qismi (Grafik uchun)
         f_num = sp.lambdify((t_sym, y_sym), f_sym, "numpy")
         t_common = np.linspace(t0, t_end, 200)
         sol_rk45 = solve_ivp(f_num, (t0, t_end), [y0], t_eval=t_common, method='RK45')
