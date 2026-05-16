@@ -2,17 +2,6 @@ import os
 import sys
 import subprocess
 
-# --- KUTUBXONALARNI AVTOMATIK TEKSHIRISH VA O'RNATISH ---
-def install_packages():
-    required_packages = ["streamlit", "sympy", "matplotlib", "numpy", "scipy"]
-    for package in required_packages:
-        try:
-            __import__(package)
-        except ImportError:
-            subprocess.check_call([sys.executable, "-m", "pip", "install", package])
-
-install_packages()
-
 # --- ASOSIY DASTUR QISMI ---
 import streamlit as st
 import numpy as np
